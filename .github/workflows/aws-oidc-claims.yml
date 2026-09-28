@@ -1,0 +1,25 @@
+name: AWS - Inspect OIDC claims
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment whose trust will be configured
+        type: choice
+        default: hml-plan
+        options: [hml-plan, hml, hml-drift]
+        required: true
+permissions:
+  contents: read
+jobs:
+  claims:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - run: python3 scripts/oidc_claims.py

@@ -18,8 +18,11 @@ O deploy fica desativado ate configurar `prod-demo` e a variavel
 planeja uma criacao; isso e esperado aqui. Nao representa state persistente,
 provisionamento AWS ou rollback real. Nenhuma credencial AWS e necessaria.
 
-O proximo incremento adiciona S3 com SSE-S3 e lock, OIDC e roles por ambiente
-e funcao. Os planos reais e states devem permanecer em armazenamento restrito.
+O incremento AWS esta implementado em `bootstrap/` e `stacks/aws-hml/`, com
+S3/SSE-S3/lock, OIDC e roles separadas de plan/apply/drift. Sua ativacao depende
+do bootstrap local e da configuracao GitHub. Siga o [roteiro AWS real](docs/08c-aws-real.md).
+Testes locais usam mocks; a execucao na conta AWS deve ser registrada como
+evidencia separada. Planos reais e states permanecem no S3 privado.
 
 ## Fluxo
 
@@ -38,8 +41,8 @@ flowchart LR
 Registre links reais em `docs/evidencias.md`: PR aprovado, check bloqueando
 merge, deployment aguardando revisao, branch rejeitada e apply concluido.
 Use o modelo ao final do roteiro. Nao apresente controles apenas planejados
-como ja implementados. Ainda faltam scanners HCL, lint de workflows,
-backend remoto e testes de permissao AWS neste template inicial.
+como ja implementados. Ainda faltam scanners HCL e lint de workflows como
+checks de CI. Validar permissoes efetivas AWS faz parte do novo roteiro.
 
 ## Verificacao local
 
