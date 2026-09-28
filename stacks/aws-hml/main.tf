@@ -43,7 +43,7 @@ variable "revision" {
 
 resource "aws_ssm_parameter" "release" {
   name  = "/portfolio/hml/release/revision"
-  type  = "SecureString"
+  type  = "String"
   tier  = "Standard"
   value = var.revision
   tags = {
