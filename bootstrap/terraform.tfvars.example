@@ -1,0 +1,4 @@
+aws_account_id            = "123456789012"
+aws_region                = "us-east-1"
+bucket_name               = "portfolio-state-123456789012-unique-suffix"
+github_subject_repository = "DiegoRamosCloud@123456/terraform-delivery-portfolio@987654"
