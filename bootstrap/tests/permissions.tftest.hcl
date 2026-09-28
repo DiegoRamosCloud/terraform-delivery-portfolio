@@ -33,6 +33,15 @@ run "least_privilege" {
 
   assert {
     condition = alltrue([
+      for function in keys(local.roles) :
+      one([for s in jsondecode(aws_iam_role_policy.delivery[function].policy).Statement : s.Resource if s.Sid == "DescribeParametersForProviderRead"]) == ["*"] &&
+      one([for s in jsondecode(aws_iam_role_policy.delivery[function].policy).Statement : s.Action if s.Sid == "DescribeParametersForProviderRead"]) == ["ssm:DescribeParameters"]
+    ])
+    error_message = "O provider le metadados do SSM com DescribeParameters, que nao aceita ARN de parametro."
+  }
+
+  assert {
+    condition = alltrue([
       for function, environment in local.roles :
       jsondecode(aws_iam_role.delivery[function].assume_role_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"] == "repo:owner@123/repo@456:environment:${environment}"
     ])
