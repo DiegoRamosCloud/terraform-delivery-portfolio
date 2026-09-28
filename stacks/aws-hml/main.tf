@@ -34,7 +34,7 @@ variable "aws_region" {
 
 variable "revision" {
   type    = string
-  default = "v2"
+  default = "v3"
   validation {
     condition     = can(regex("^v[0-9]+$", var.revision))
     error_message = "Use v seguido de numero, por exemplo v2."
