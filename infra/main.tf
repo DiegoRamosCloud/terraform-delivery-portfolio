@@ -4,7 +4,7 @@ terraform {
 
 variable "revision" {
   type    = string
-  default = "invalida"
+  default = "v3"
 
   validation {
     condition     = can(regex("^v[0-9]+$", var.revision))
