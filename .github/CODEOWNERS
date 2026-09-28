@@ -1,5 +1,5 @@
 # Add a second collaborator with write access for independent PR approval.
-* @DiegoRamosCloud
-/.github/ @DiegoRamosCloud
-/policies/ @DiegoRamosCloud
-/infra/ @DiegoRamosCloud
+* @DiegoRamosCloud @SuporteKXC
+/.github/ @DiegoRamosCloud  @SuporteKXC
+/policies/ @DiegoRamosCloud  @SuporteKXC
+/infra/ @DiegoRamosCloud  @SuporteKXC
