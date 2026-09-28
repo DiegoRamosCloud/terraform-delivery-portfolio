@@ -43,7 +43,7 @@ variable "revision" {
 
 variable "release_events_retention_seconds" {
   type    = number
-  default = 86400
+  default = 172800
   validation {
     condition     = var.release_events_retention_seconds >= 60 && var.release_events_retention_seconds <= 1209600
     error_message = "A retencao da fila deve ficar entre 60 segundos e 14 dias."
@@ -65,7 +65,7 @@ resource "aws_ssm_parameter" "release" {
 resource "aws_sqs_queue" "release_events" {
   name                       = "portfolio-hml-release-events"
   message_retention_seconds  = var.release_events_retention_seconds
-  visibility_timeout_seconds = 30
+  visibility_timeout_seconds = 120
   sqs_managed_sse_enabled    = true
 
   tags = {
