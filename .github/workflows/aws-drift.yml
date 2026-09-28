@@ -1,0 +1,37 @@
+name: AWS - Hml drift
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 12 * * 1-5"
+permissions:
+  contents: read
+concurrency:
+  group: aws-hml-ssm
+  cancel-in-progress: false
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_VAR_aws_account_id: ${{ vars.AWS_ACCOUNT_ID }}
+  TF_VAR_aws_region: ${{ vars.AWS_REGION }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  TFSTATE_BUCKET: ${{ vars.TFSTATE_BUCKET }}
+jobs:
+  drift:
+    if: ${{ vars.ENABLE_AWS_LAB == 'true' && vars.ENABLE_AWS_DRIFT == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: hml-drift
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/aws-session
+        with:
+          role-arn: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          account-id: ${{ vars.AWS_ACCOUNT_ID }}
+      - name: Read-only infrastructure drift check
+        run: python3 scripts/aws_delivery.py drift

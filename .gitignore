@@ -18,3 +18,9 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
+__pycache__/
+*.pyc
+bootstrap/backend.tf
+*.backend.hcl
+plan.zip
+bootstrap-plan

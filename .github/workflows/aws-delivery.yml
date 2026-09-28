@@ -1,0 +1,66 @@
+name: AWS - Hml delivery
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: aws-hml-ssm
+  cancel-in-progress: false
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_VAR_aws_account_id: ${{ vars.AWS_ACCOUNT_ID }}
+  TF_VAR_aws_region: ${{ vars.AWS_REGION }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  TFSTATE_BUCKET: ${{ vars.TFSTATE_BUCKET }}
+jobs:
+  plan:
+    if: ${{ vars.ENABLE_AWS_LAB == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: hml-plan
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      plan_sha256: ${{ steps.plan.outputs.plan_sha256 }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: open-policy-agent/setup-opa@34a30e8a924d1b03ce2cf7abe97250bbb1f332b5 # v2.2.0
+        with:
+          version: "1.20.2"
+      - name: Policy regression before credentials
+        run: bash scripts/test-policy-fixtures.sh
+      - uses: ./.github/actions/aws-session
+        with:
+          role-arn: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          account-id: ${{ vars.AWS_ACCOUNT_ID }}
+      - name: Private plan and OPA
+        id: plan
+        run: python3 scripts/aws_delivery.py plan
+  apply:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: hml
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/aws-session
+        with:
+          role-arn: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          account-id: ${{ vars.AWS_ACCOUNT_ID }}
+      - name: Verify and apply approved saved plan
+        env:
+          EXPECTED_PLAN_SHA256: ${{ needs.plan.outputs.plan_sha256 }}
+        run: python3 scripts/aws_delivery.py apply

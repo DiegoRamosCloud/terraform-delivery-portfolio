@@ -35,6 +35,17 @@ jobs:
           version: "1.20.2"
       - name: Regression tests
         run: bash scripts/test-policy-fixtures.sh
+      - name: AWS code and mocked contracts (no AWS credentials)
+        run: |
+          python3 -m unittest discover -s scripts/tests -v
+          terraform -chdir=bootstrap fmt -check -diff -recursive
+          terraform -chdir=bootstrap init -backend=false -input=false -lockfile=readonly
+          terraform -chdir=bootstrap validate -no-color
+          terraform -chdir=bootstrap test -no-color
+          terraform -chdir=stacks/aws-hml fmt -check -diff -recursive
+          terraform -chdir=stacks/aws-hml init -backend=false -input=false -lockfile=readonly
+          terraform -chdir=stacks/aws-hml validate -no-color
+          terraform -chdir=stacks/aws-hml test -no-color
       - name: Validate and plan synthetic infrastructure
         run: |
           terraform -chdir=infra fmt -check -diff
