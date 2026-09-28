@@ -407,7 +407,6 @@ pode substituir outra pendente. Nao use disparos repetidos como fila de trabalho
 | Erro antes do assume role | AWS_ROLE_ARN/region nao definidos ou allowlist | Conferir escopo das variaveis e action permitida |
 | Init AccessDenied | Permissoes do bucket/state/lock ou policy organizacional | Conferir policy da role do job e CloudTrail; nao anexar AdministratorAccess |
 | Plan SSM AccessDenied | Prefixo alterado ou permissao de leitura ausente | Alinhar stack e policy via PR/bootstrap |
-| Apply SSM AccessDenied apos criar/atualizar parametro | Provider gravou com `PutParameter`, mas falhou ao ler metadados com `ssm:DescribeParameters` | Reaplicar bootstrap com a policy atual; essa action precisa `Resource = "*"` na AWS |
 | Hash divergente | Objeto diferente do produzido pelo job plan | Nao aplicar; investigar e gerar outro plano |
 | Plano expirado | Mais de 60 minutos antes de aplicar | Re-run all jobs; nova revisao/aprovacao |
 | NoSuchKey em nova tentativa | Reexecutou apenas apply | Re-run all jobs; chave inclui tentativa |

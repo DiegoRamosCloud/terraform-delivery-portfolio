@@ -140,12 +140,6 @@ resource "aws_iam_role_policy" "delivery" {
         Effect   = "Allow"
         Action   = ["ssm:GetParameter", "ssm:GetParameters", "ssm:ListTagsForResource"]
         Resource = [local.parameter_arn]
-      },
-      {
-        Sid      = "DescribeParametersForProviderRead"
-        Effect   = "Allow"
-        Action   = ["ssm:DescribeParameters"]
-        Resource = ["*"]
       }
       ], each.key == "apply" ? [{
         Sid      = "WriteReleaseParameter"
