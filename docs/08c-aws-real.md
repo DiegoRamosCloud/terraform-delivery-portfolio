@@ -370,6 +370,46 @@ Apos merge, espere **Update: 1**, sem criar/remover SSM. Aprove e confira valor
 `v2` e incremento de versao no SSM. Isso fecha PR -> revisao -> plano real ->
 aprovacao -> alteracao cloud -> persistencia de state.
 
+### 10.1 Mudanca misturada sem policy especifica
+
+Este exercicio treina revisao operacional quando ainda nao existe uma policy
+OPA para prever o caso. A fila SQS `portfolio-hml-release-events` existe para
+isso: ela usa SSE-SQS, nao KMS, e parada praticamente so gera custo se houver
+requests.
+
+Mudanca aprovada para o exercicio:
+
+```hcl
+release_events_retention_seconds = 172800
+```
+
+Mudanca fora do escopo:
+
+```hcl
+visibility_timeout_seconds = 120
+```
+
+Abra uma branch e misture as duas alteracoes em `stacks/aws-hml/main.tf`.
+O comportamento esperado e o reviewer bloquear a PR, nao porque uma policy
+central negou, mas porque o diff contem mais do que foi solicitado.
+
+Comentario sugerido:
+
+```text
+A alteracao de retencao da fila esta aprovada.
+
+A mudanca de visibility_timeout_seconds nao faz parte do escopo desta PR.
+Remova essa alteracao ou abra uma PR separada com justificativa, impacto,
+plano de rollback e validacao.
+```
+
+Corrija mantendo somente a retencao e faca novo push na mesma PR. Depois do
+merge, o delivery real deve mostrar update da fila, aguardar aprovacao no
+Environment `hml` e aplicar somente a mudanca revisada.
+
+Depois do exercicio, a equipe pode decidir se essa classe de mudanca merece
+OPA, `terraform test`, CODEOWNERS, checklist de PR ou apenas runbook.
+
 ## 11. Drift com a terceira role
 
 Depois do primeiro deployment, habilite `ENABLE_AWS_DRIFT=true` e execute

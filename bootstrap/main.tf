@@ -1,6 +1,8 @@
 locals {
   state_key     = "portfolio/hml/ssm/terraform.tfstate"
   parameter_arn = "arn:aws:ssm:${var.aws_region}:${var.aws_account_id}:parameter/portfolio/hml/release/revision"
+  queue_name    = "portfolio-hml-release-events"
+  queue_arn     = "arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${local.queue_name}"
   bucket_arn    = "arn:aws:s3:::${var.bucket_name}"
   roles = {
     plan  = "hml-plan"
@@ -140,12 +142,35 @@ resource "aws_iam_role_policy" "delivery" {
         Effect   = "Allow"
         Action   = ["ssm:GetParameter", "ssm:GetParameters", "ssm:ListTagsForResource"]
         Resource = [local.parameter_arn]
+      },
+      {
+        Sid      = "DescribeParametersForProviderRead"
+        Effect   = "Allow"
+        Action   = ["ssm:DescribeParameters"]
+        Resource = ["*"]
+      },
+      {
+        Sid      = "ReadReleaseEventsQueue"
+        Effect   = "Allow"
+        Action   = ["sqs:GetQueueAttributes", "sqs:GetQueueUrl", "sqs:ListQueueTags"]
+        Resource = [local.queue_arn]
       }
       ], each.key == "apply" ? [{
         Sid      = "WriteReleaseParameter"
         Effect   = "Allow"
         Action   = ["ssm:PutParameter", "ssm:DeleteParameter", "ssm:AddTagsToResource", "ssm:RemoveTagsFromResource"]
         Resource = [local.parameter_arn]
+      },
+      {
+        Sid    = "WriteReleaseEventsQueue"
+        Effect = "Allow"
+        Action = [
+          "sqs:CreateQueue",
+          "sqs:SetQueueAttributes",
+          "sqs:TagQueue",
+          "sqs:UntagQueue"
+        ]
+        Resource = [local.queue_arn]
         }] : [], each.key != "drift" ? [{
         Sid      = "PrivatePlanExchange"
         Effect   = "Allow"

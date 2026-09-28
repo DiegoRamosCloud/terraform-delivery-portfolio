@@ -13,9 +13,11 @@ run "least_privilege" {
     condition = alltrue([
       for function in ["plan", "drift"] :
       !contains(flatten([for s in jsondecode(aws_iam_role_policy.delivery[function].policy).Statement : s.Action]), "ssm:PutParameter") &&
-      !contains(flatten([for s in jsondecode(aws_iam_role_policy.delivery[function].policy).Statement : s.Action]), "ssm:DeleteParameter")
+      !contains(flatten([for s in jsondecode(aws_iam_role_policy.delivery[function].policy).Statement : s.Action]), "ssm:DeleteParameter") &&
+      !contains(flatten([for s in jsondecode(aws_iam_role_policy.delivery[function].policy).Statement : s.Action]), "sqs:CreateQueue") &&
+      !contains(flatten([for s in jsondecode(aws_iam_role_policy.delivery[function].policy).Statement : s.Action]), "sqs:SetQueueAttributes")
     ])
-    error_message = "Plan e drift nao podem escrever/apagar SSM."
+    error_message = "Plan e drift nao podem escrever/apagar recursos de workload."
   }
 
   assert {
@@ -29,6 +31,23 @@ run "least_privilege" {
   assert {
     condition     = contains(flatten([for s in jsondecode(aws_iam_role_policy.delivery["apply"].policy).Statement : s.Action]), "ssm:PutParameter")
     error_message = "Apply precisa gravar o parametro."
+  }
+
+  assert {
+    condition = alltrue([
+      contains(flatten([for s in jsondecode(aws_iam_role_policy.delivery["apply"].policy).Statement : s.Action]), "sqs:CreateQueue"),
+      contains(flatten([for s in jsondecode(aws_iam_role_policy.delivery["apply"].policy).Statement : s.Action]), "sqs:SetQueueAttributes"),
+      !contains(flatten([for s in jsondecode(aws_iam_role_policy.delivery["apply"].policy).Statement : s.Action]), "sqs:DeleteQueue")
+    ])
+    error_message = "Apply pode criar/alterar SQS do lab, mas nao apagar fila."
+  }
+
+  assert {
+    condition = alltrue([
+      for function in keys(local.roles) :
+      one([for s in jsondecode(aws_iam_role_policy.delivery[function].policy).Statement : s.Resource if s.Sid == "ReadReleaseEventsQueue"]) == [local.queue_arn]
+    ])
+    error_message = "Leitura de SQS deve ficar restrita a fila do lab."
   }
 
   assert {
