@@ -1,0 +1,18 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.14.7",
+  "resource_changes": [
+    {
+      "address": "aws_ssm_parameter.release_revision",
+      "mode": "managed",
+      "type": "aws_ssm_parameter",
+      "name": "release_revision",
+      "change": {
+        "actions": ["create", "delete"],
+        "before": {"name": "/lab/old/revision", "value": "v1"},
+        "after": {"name": "/lab/new/revision", "value": "v1"},
+        "replace_paths": [["name"]]
+      }
+    }
+  ]
+}

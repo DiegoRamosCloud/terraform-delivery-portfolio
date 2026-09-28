@@ -1,0 +1,56 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+
+jobs:
+  terraform-ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.14.7"
+          terraform_wrapper: false
+      - uses: open-policy-agent/setup-opa@34a30e8a924d1b03ce2cf7abe97250bbb1f332b5 # v2.2.0
+        with:
+          version: "1.20.2"
+      - name: Regression tests
+        run: bash scripts/test-policy-fixtures.sh
+      - name: Validate and plan synthetic infrastructure
+        run: |
+          terraform -chdir=infra fmt -check -diff
+          terraform -chdir=infra init -backend=false -input=false
+          terraform -chdir=infra validate -no-color
+          terraform -chdir=infra plan -input=false -no-color -out=tfplan
+          terraform -chdir=infra show -json tfplan > infra/tfplan.json
+      - name: Policy on real Terraform plan
+        run: |
+          opa eval --fail-defined --data policies/opa \
+            --input infra/tfplan.json 'data.terraform.guard.deny[_]'
+      - name: Synthetic plan summary
+        run: |
+          {
+            echo '### PR/CI plan (synthetic data only)'
+            echo '```text'
+            terraform -chdir=infra show -no-color tfplan
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
