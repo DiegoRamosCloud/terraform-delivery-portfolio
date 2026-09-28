@@ -65,7 +65,7 @@ resource "aws_ssm_parameter" "release" {
 resource "aws_sqs_queue" "release_events" {
   name                       = "portfolio-hml-release-events"
   message_retention_seconds  = var.release_events_retention_seconds
-  visibility_timeout_seconds = 120
+  visibility_timeout_seconds = 30
   sqs_managed_sse_enabled    = true
 
   tags = {
