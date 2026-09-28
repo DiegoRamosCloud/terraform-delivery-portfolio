@@ -43,7 +43,7 @@ variable "revision" {
 
 variable "release_events_retention_seconds" {
   type    = number
-  default = 86400
+  default = 172800
   validation {
     condition     = var.release_events_retention_seconds >= 60 && var.release_events_retention_seconds <= 1209600
     error_message = "A retencao da fila deve ficar entre 60 segundos e 14 dias."
